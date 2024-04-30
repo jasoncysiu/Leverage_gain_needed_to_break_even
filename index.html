@@ -73,9 +73,11 @@
         }
 
         function updateGraph() {
-            var principal = document.getElementById("principal").value;
-            var loss = document.getElementById("loss").value;
-            var requiredGain = calculateGain(parseFloat(loss));
+            var principal = parseFloat(document.getElementById("principal").value);
+            var loss = parseFloat(document.getElementById("loss").value);
+            var requiredGain = calculateGain(loss);
+            var remainingPrincipal = principal * (1 - loss / 100);
+            var regainAmount = remainingPrincipal * (requiredGain / 100);
             
             var curveData = generateCurveData();
 
@@ -85,14 +87,14 @@
                     y: curveData.map(point => point.y),
                     type: 'scatter',
                     mode: 'lines',
-                    name: 'Gain Needed to Break Even'
+                    name: 'To breakeven'
                 },
                 {
-                    x: [parseFloat(loss)],
+                    x: [loss],
                     y: [requiredGain],
                     type: 'scatter',
                     mode: 'markers+text',
-                    text: [`At ${loss}% loss, need ${requiredGain?.toFixed(2)}% gain`],
+                    text: [`At ${loss}% loss, need ${requiredGain.toFixed(2)}% gain<br>to regain ${principal - remainingPrincipal + regainAmount} back to $${principal}`],
                     textposition: 'top center',
                     marker: {color: 'red', size: 10}
                 }
@@ -101,7 +103,8 @@
             var layout = {
                 title: 'Required Gain to Break Even',
                 xaxis: { title: 'Loss Percentage (%)' },
-                yaxis: { title: 'Gain Percentage (%)', range: [0, Math.max(300, requiredGain + 10)] }
+                yaxis: { title: 'Gain Percentage (%)', range: [0, Math.max(300, requiredGain + 10)] },
+                showlegend: false
             };
 
             Plotly.newPlot('plot', data, layout);
