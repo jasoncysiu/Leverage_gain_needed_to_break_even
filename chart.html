@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recovery Gains Calculator</title>
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #plot {
+            width: 90%;
+            height: 90%;
+        }
+    </style>
+</head>
+<body>
+    <div id="plot"></div>
+    <script>
+        function calculateGain(loss) {
+            if (loss >= 100) return null;
+            return (loss / (100 - loss)) * 100;
+        }
+
+        function updateGraph() {
+            var principal = 100; // Assumed principal amount
+            var loss = 50; // Assumed loss percentage
+            var requiredGain = calculateGain(loss);
+            var remainingPrincipal = principal * (1 - loss / 100);
+            var regainAmount = remainingPrincipal * (requiredGain / 100);
+
+            var curveData = [];
+            for (let loss = 0; loss <= 100; loss += 1) {
+                let gain = calculateGain(loss);
+                if (!isFinite(gain)) gain = null;  // Handle the division by zero case
+                curveData.push({x: loss, y: gain});
+            }
+
+            var data = [
+                {
+                    x: curveData.map(point => point.x),
+                    y: curveData.map(point => point.y),
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'To breakeven'
+                },
+                {
+                    x: [loss],
+                    y: [requiredGain],
+                    type: 'scatter',
+                    mode: 'markers+text',
+                    text: [`At ${loss}% loss, need ${requiredGain.toFixed(2)}% gain<br>to regain $${(principal - remainingPrincipal + regainAmount).toFixed(2)} back to $${principal}`],
+                    textposition: 'top center',
+                    marker: {color: 'red', size: 10}
+                }
+            ];
+
+            var layout = {
+                title: 'Required Gain to Break Even',
+                xaxis: { title: 'Loss Percentage (%)' },
+                yaxis: { title: 'Gain Percentage (%)', range: [0, Math.max(300, requiredGain + 10)] },
+                showlegend: false
+            };
+            Plotly.newPlot('plot', data, layout);
+        }
+
+        updateGraph(); // Initial graph rendering
+    </script>
+</body>
+</html>
